@@ -90,3 +90,14 @@ Yukon                        0.641975
 Yukon Territory              0.873724
 Name: species, dtype: float64
 ```
+
+
+##### Saving/loading data
+```python
+# for large downloads you may want to save the dataframe to CSV.
+ep.df.to_csv("data/Bombus-1900-1960-CA.csv")
+
+# you can later reload it as an Epochs instance like the following.
+ep = records.load_epochs_from_csv("data/Bombus-1900-1960-CA.csv")
+
+```
