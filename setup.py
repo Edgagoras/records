@@ -9,7 +9,7 @@ with open("records/__init__.py", "r") as initfile:
     for line in lines:
         if "__version__" in line:
             # get version line and strip white space and quotations
-            version = line.strip().split()[-1].strip("'").strip("'")
+            version = line.strip().split()[-1].strip("'").strip('"')
 
 
 # build command
