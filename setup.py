@@ -18,6 +18,7 @@ setup(
     version=version,
     packages=find_packages(),
     author="Deren Eaton",
+    author_email="de2356@columbia.edu",
     license="GPLv3",
     description="A package for querying GBIF",
     classifiers=["Programming Language :: Python :: 3"],
