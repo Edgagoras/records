@@ -20,6 +20,11 @@ cd records/
 pip install .
 ```
 
+### Dependencies
+```bash
+conda install requests pandas numpy
+```
+
 
 ### Example usage
 
