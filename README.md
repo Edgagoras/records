@@ -5,7 +5,7 @@ collect large numbers of records while following limitations on queries.
 Results are returned as Pandas dataframes. 
 
 **For code-review assignment 8 for the PDSB class**  
-See the jupyter notebook in `notebooks/code-review-8.ipynb` for a review of 
+See the jupyter notebook in `notebooks/records-class-objects.ipynb` for a review of 
 the code for assignment 8. A completed version of the assignment can be found
 in the `assignment` branch of this repository. This branch (master) has been
 modified to include further code, as described in the notebook. To see code
