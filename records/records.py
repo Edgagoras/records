@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-"a package for pulling occurrenct data from GBIF"
+"a package for pulling occurrence data from GBIF"
 
 
 import requests
 import pandas as pd
+import numpy as np
 
 
 class Records:
     """
-    Create a Records class instance with GBIF occurrence records stored 
+    Returns a Records class instance with GBIF occurrence records stored 
     in a pandas DataFrame for a queried taxon between a range of years. 
 
     Parameters:
@@ -25,9 +26,8 @@ class Records:
     params: The parameter dictionary to filter GBIF search.
     df: Pandas DataFrame with returned records.
     sdf: A view of the 'df' DataFrame selecting only three relevant columns.
-
     """
-    def __init__(self, q, interval):
+    def __init__(self, q, interval, **kwargs):
         # the API url for searching GBIF occurrences
         self.baseurl = "http://api.gbif.org/v1/occurrence/search?"
 
@@ -43,8 +43,17 @@ class Records:
             "limit": "300",
         }
 
+        # allow users to enter or modify other params using kwargs
+        self.params.update(kwargs)
+
         # run the request query until all records are obtained
         self.df = pd.DataFrame(self._get_all_records())
+
+        # make shortcut view to most used columns (if they exist)
+        if self.df.empty:
+            self.sdf = self.df
+        else:
+            self.sdf = self.df[["species", "year", "stateProvince"]]          
 
 
     def _get_all_records(self):
@@ -63,7 +72,7 @@ class Records:
             # increment counter
             self.params["offset"] = str(int(self.params["offset"]) + 300)
             
-            # concatenate data 
+            # get data as json list of dicts and add to 'data' list
             idata = res.json()
             data += idata["results"]
             
@@ -72,3 +81,108 @@ class Records:
                 break
             
         return data
+
+
+class Epochs:
+    """
+    Returns an Epochs class instance that includes GBIF occurrence records 
+    and stores an extra label with each query that includes the interval 
+    (epoch) during which those records were collected, and returns all 
+    records in a sorted pandas dataframe. 
+
+    Parameters:
+    -----------
+    q: str
+        Query taxonomic name. 
+    start: int
+        Earliest year from which to search for records. 
+    end: int
+        Latest year from which to search for records. 
+    epochsize: int
+        of years to return results for. Should be (min, max) tuple.
+
+    Attributes:
+    -----------
+    df: Pandas DataFrame with returned records.
+    sdf: A view of the 'df' DataFrame selecting only four relevant columns.
+    """ 
+    def __init__(self, q, start, end, epochsize, **kwargs):
+        
+        # make range of epochs
+        epochs = range(start, end, epochsize)
+
+        # get Record objects across the epoch range
+        rdicts = {
+            i: Records(q, (i, i + epochsize), **kwargs) for i in epochs
+        }
+
+        # add epoch to each dataframe
+        for epoch in rdicts:
+            rdicts[epoch].df["epoch"] = epoch
+
+        # if rdicts, then build dataframe, otherwise skip it. 
+        if rdicts:
+
+            # concatenate all dataframes into one
+            self.df = pd.concat([i.df for i in rdicts.values()])
+
+            # sort values by year, and reset index without keeping old index
+            self.df = (
+                self.df
+                .sort_values(by="year")
+                .reset_index(drop=True)
+                )
+
+            # create shortcut view 
+            self.sdf = self.df[["species", "year", "epoch", "stateProvince"]]
+        else:
+            self.df = pd.DataFrame([])
+            self.sdf = self.df
+
+
+    def simpsons_diversity(self, by):
+        """
+        Calculates simpon's diversity index: the probability that any two 
+        sampled individuals are the same species. Enter a key for groupby
+        as a list of single or multiple keys.
+
+        Parameters
+        -----------
+        by: str
+            A column name used by .groupby to group samples prior to 
+            calculating simpson's diversity. For example, enter 
+        """
+        # group on 'by' keyword, and exclude records missing data for 'by'.
+        # and then count species in each group and calculate simp's div.
+        data = (
+            self.df[self.df[by].notna()]
+            .groupby(by)
+            .species
+            .apply(calculate_simpsons_diversity)
+            )
+
+        # set zero values of simpson's diversity to nan
+        data[data == 0] = np.nan
+        return data
+
+
+
+
+# utility functions
+def load_epochs_from_csv(filepath):
+    # init an empty epoch instance
+    ep = Epochs("", 0, 0, 1)
+
+    # load existing dataframe to instance df, and set sdf view shortcut
+    ep.df = pd.read_csv(filepath, index_col=0)
+    ep.sdf = ep.df[["species", "year", "epoch", "stateProvince"]] 
+    return ep
+
+
+def calculate_simpsons_diversity(arr):
+    "internal function to calculate simpson's diversity"
+    simps = 0.
+    for taxon in arr.unique():
+        # proportion of individuals that are this species
+        simps += (np.sum(arr == taxon) / arr.shape[0]) ** 2
+    return 1. - simps
