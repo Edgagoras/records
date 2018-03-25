@@ -49,11 +49,17 @@ class Records:
         # run the request query until all records are obtained
         self.df = pd.DataFrame(self._get_all_records())
 
-        # make shortcut view to most used columns (if they exist)
-        if self.df.empty:
-            self.sdf = self.df
-        else:
-            self.sdf = self.df[["species", "year", "stateProvince"]]          
+
+    @property
+    def sdf(self):
+        """
+        Return a copy of the current .df dataframe selecting only the three
+        most generally relevant columns: species, year, and stateProvince. 
+        This is only meant for viewing and will raise a warning if you try to
+        modify it since it is a copy, and thus you would be setting values on 
+        a selection of a selection. See pandas docs in the warning for detalis.
+        """
+        return self.df[["species", "year", "country", "stateProvince"]]
 
 
     def _get_all_records(self):
@@ -132,12 +138,24 @@ class Epochs:
                 .sort_values(by="year")
                 .reset_index(drop=True)
                 )
-
-            # create shortcut view 
-            self.sdf = self.df[["species", "year", "epoch", "stateProvince"]]
         else:
             self.df = pd.DataFrame([])
-            self.sdf = self.df
+
+
+    @property
+    def sdf(self):
+        """
+        Return a copy of the current .df dataframe selecting only the three
+        most generally relevant columns: species, year, epoch, country, 
+        and stateProvince. 
+
+        This is only meant for viewing and will raise a warning if you try to
+        modify it since it is a copy, and thus you would be setting values on 
+        a selection of a selection. See pandas docs in the warning for detalis.
+        """
+        return self.df[
+            ["species", "year", "epoch", "country", "stateProvince"]]
+
 
 
     def simpsons_diversity(self, by):
@@ -155,7 +173,7 @@ class Epochs:
         # group on 'by' keyword, and exclude records missing data for 'by'.
         # and then count species in each group and calculate simp's div.
         data = (
-            self.df[self.df[by].notna()]
+            self.df[self.df[by].notna() & self.df.species.notna()]
             .groupby(by)
             .species
             .apply(calculate_simpsons_diversity)
@@ -175,7 +193,6 @@ def load_epochs_from_csv(filepath):
 
     # load existing dataframe to instance df, and set sdf view shortcut
     ep.df = pd.read_csv(filepath, index_col=0)
-    ep.sdf = ep.df[["species", "year", "epoch", "stateProvince"]] 
     return ep
 
 
