@@ -1,15 +1,16 @@
 # records
-An example project repository for PDSB. 
-
-The `records` library provides tools for querying the GBIF database using its
-public REST API, and to efficiently collect large numbers of records while
-following limitations on queries. Results are returned as Pandas dataframes. 
-
+An example project repository for PDSB. The `records` library provides tools 
+for querying the GBIF database using its public REST API, and to efficiently 
+collect large numbers of records while following limitations on queries. 
+Results are returned as Pandas dataframes. 
 
 **For code-review assignment 8 for the PDSB class**  
-See the code in the `assignment` branch before reviewing code in this 
-master branch. To see that code, find the tab above that says Branch:master 
-and click on it to select the assignment branch.
+See the jupyter notebook in `notebooks/code-review-8.ipynb` for a review of 
+the code for assignment 8. A completed version of the assignment can be found
+in the `assignment` branch of this repository. This branch (master) has been
+modified to include further code, as described in the notebook. To see code
+in the `assignment` branch find the tab above that says Branch:master and 
+click on it to select the assignment branch.
 
 
 ### Installation
