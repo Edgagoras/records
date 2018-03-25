@@ -191,7 +191,7 @@ def load_epochs_from_csv(filepath):
     # init an empty epoch instance
     ep = Epochs("", 0, 0, 1)
 
-    # load existing dataframe to instance df, and set sdf view shortcut
+    # load existing dataframe to instance's .df attribute
     ep.df = pd.read_csv(filepath, index_col=0)
     return ep
 
